@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Registration</title>
+    <link  rel="stylesheet" th:href="@{/css/login.css}" href="">
+    <script th:src="@{/js/jquery-3.7.1.min.js}" src="ht6.0.min.js"></script>
+</head>
+<body>
+<h2>User Registration</h2>
+<form id="registrationForm">
+    <label for="username">Username:</label><br>
+    <input type="text" id="username" name="username" required><br>
+
+    <label for="password">Password:</label><br>
+    <input type="password" id="password" name="password" required><br>
+
+    <label for="email">Email:</label><br>
+    <input type="email" id="email" name="email" required><br>
+    <button type="submit">Register</button>
+</form>
+
+<script>
+    $(document).ready(function(){
+        $('#registrationForm').submit(function(e){
+            e.preventDefault(); // Prevent default form submission
+            var formData = {
+                username: $('#username').val(),
+                password: $('#password').val(),
+                email: $('#email').val()
+            };
+
+
+            // AJAX POST request
+            $.ajax({
+                type: 'POST',
+                url: 'user/register',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                success: function(response) {
+                    if (response.code === 0) {
+                        alert(response.message);
+                        // Optionally redirect or do something else upon successful registration
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Registration failed: ' + error);
+                    // Optionally handle errors
+                }
+            });
+        });
+    });
+
+</script>
+</body>
+</html>

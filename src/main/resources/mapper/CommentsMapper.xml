@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cg.myblog.mapper.CommentsMapper">
+
+    <resultMap id="BaseResultMap" type="com.cg.myblog.pojo.Comments">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="postId" column="post_id" jdbcType="INTEGER"/>
+            <result property="userId" column="user_id" jdbcType="INTEGER"/>
+            <result property="content" column="content" jdbcType="VARCHAR"/>
+            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,post_id,user_id,
+        content,created_at
+    </sql>
+    <select id="getComment" resultType="com.cg.myblog.pojo.Comments">
+        SELECT c.*, u.username
+        FROM comments c
+                 LEFT JOIN users u ON c.user_id = u.id
+        WHERE c.post_id = #{pid}
+    </select>
+</mapper>

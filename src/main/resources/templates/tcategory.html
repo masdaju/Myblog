@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Category Management</title>
+    <link rel="stylesheet" href="path/to/your/css/styles.css"> <!-- 你的样式路径 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link  rel="stylesheet" th:href="@{/css/category.css}" href="">
+    <style>
+        /* 样式 */
+        #addCategoryModal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ccc;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+        #addCategoryModal.active {
+            display: block;
+        }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        .modal-overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<h1>Category Management</h1>
+
+<!-- 添加分类按钮 -->
+<button id="addCategoryBtn">添加分类</button>
+
+<!-- 添加分类弹出框 -->
+<div class="modal-overlay" id="modalOverlay"></div>
+<div id="addCategoryModal">
+    <h2>添加分类</h2>
+    <form id="addCategoryForm">
+        <label for="name">分类名称:</label>
+        <input type="text" id="name" name="name" required><br><br>
+        <label for="description">分类描述:</label>
+        <input type="text" id="description" name="description" required><br><br>
+        <button type="submit">提交</button>
+        <button type="button" id="cancelBtn">取消</button>
+    </form>
+</div>
+
+<!-- 分类列表 -->
+<h2>分类列表</h2>
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>分类名称</th>
+        <th>描述</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody id="categoriesTableBody">
+    <!-- 分类数据将通过JavaScript动态插入 -->
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function() {
+        const token = localStorage.getItem('token');
+
+        // 显示添加分类弹出框
+        $('#addCategoryBtn').on('click', function() {
+            $('#addCategoryModal').addClass('active');
+            $('#modalOverlay').addClass('active');
+        });
+
+        // 隐藏添加分类弹出框
+        $('#cancelBtn, #modalOverlay').on('click', function() {
+            $('#addCategoryModal').removeClass('active');
+            $('#modalOverlay').removeClass('active');
+        });
+
+        // 添加分类
+        $('#addCategoryForm').on('submit', function(event) {
+            event.preventDefault();
+
+            const category = {
+                name: $('#name').val(),
+                description: $('#description').val()
+            };
+
+            axios.post('addCategory', category, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': token
+                }
+            })
+                .then(function(response) {
+                    alert(response.data.message);
+                    $('#name').val('');
+                    $('#description').val('');
+                    $('#addCategoryModal').removeClass('active');
+                    $('#modalOverlay').removeClass('active');
+                    loadCategories(); // 刷新分类列表
+                })
+                .catch(function(error) {
+                    console.error('Error adding category:', error);
+                    alert('Error adding category');
+                });
+        });
+
+        // 删除分类
+        function deleteCategory(id) {
+            if (confirm('确定要删除这个分类吗？')) {
+                $.ajax({
+                    url: 'deleteCategory',
+                    type: 'POST',
+                    data: {
+                        id: id
+                    },
+                    beforeSend: function(request) {
+                        request.setRequestHeader("token", token);
+                    },
+                    success: function(response) {
+                        if (response.code === 0) {
+                            alert('删除成功');
+                            loadCategories(); // 刷新分类列表
+                        } else {
+                            alert('删除失败: ' + response.message);
+                        }
+                    },
+                    error: function(error) {
+                        console.error('删除分类时发生错误:', error);
+                        alert('删除失败');
+                    }
+                });
+            }
+        }
+
+        // 加载分类
+        function loadCategories() {
+            axios.get('getCategory', {
+                headers: {
+                    'token': token
+                }
+            })
+                .then(function(response) {
+                    const categories = response.data.data;
+                    const categoriesTableBody = $('#categoriesTableBody');
+                    categoriesTableBody.empty();
+                    categories.forEach(function(category) {
+                        categoriesTableBody.append(`
+                            <tr>
+                                <td>${category.id}</td>
+                                <td>${category.name}</td>
+                                <td>${category.description}</td>
+                                <td><button onclick="deleteCategory(${category.id})">删除</button></td>
+                            </tr>
+
+                        `);
+                    });
+                })
+                .catch(function(error) {
+                    console.error('Error getting categories:', error);
+                    alert('Error getting categories');
+                });
+        }
+
+        // 初始化加载分类
+        loadCategories();
+
+        // 将 deleteCategory 函数添加到全局
+        window.deleteCategory = deleteCategory;
+        // window.headers=token;
+    });
+</script>
+</body>
+</html>

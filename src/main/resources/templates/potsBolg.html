@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Post</title>
+    <link rel="stylesheet" href="path/to/your/css/styles.css"> <!-- 你的样式路径 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var token = localStorage.getItem('token');  // 获取本地存储中的 token
+            // 获取分类列表并填充下拉菜单
+            $.ajax({
+                type: 'GET',
+                url: '/getCategory',
+                beforeSend: function(request) {
+                    request.setRequestHeader("token", token);  // 在请求头中添加 token
+                },
+                success: function(response) {
+                    if (response.code === 0) {
+                        var categories = response.data;
+                        var categorySelect = $('#categorySelect');
+                        categories.forEach(function(category) {
+                            categorySelect.append(new Option(category.name, category.id));
+                        });
+                    } else {
+                        alert('Failed to load categories: ' + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('An error occurred: ' + error);
+                }
+            });
+
+            function sendAjaxRequest(status) {
+
+                var postData = {
+                    categoryId: $('#categorySelect').val(),  // 从下拉菜单中获取分类 ID
+                    title: $('#title').val(),
+                    content: $('#content').val(),
+                    status: status
+                };
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/addPost',
+                    contentType: 'application/json',
+                    data: JSON.stringify(postData),
+                    beforeSend: function(request) {
+                        request.setRequestHeader("token", token);  // 在请求头中添加 token
+                    },
+                    success: function(response) {
+                        if (response.code === 0) {
+                            alert('Post added successfully');
+                            window.parent.loadPage("/getPostforUser")
+                        } else {
+                            alert('添加失败' + response.message);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        alert('An error occurred: ' + error);
+                    }
+                });
+            }
+            $('#addButton').on('click', function(event) {
+                event.preventDefault();
+                sendAjaxRequest('review');
+            });
+            $('#saveButton').on('click', function(event) {
+                event.preventDefault();
+                sendAjaxRequest('draft');
+            });
+
+
+        });
+    </script>
+</head>
+<body>
+<h1>添加新博客</h1>
+<form id="addPostForm">
+    <label for="categorySelect">分类:</label>
+    <select id="categorySelect" name="categoryId" required>
+        <option value="">选择分类</option>
+    </select><br>
+    <label for="title">标题:</label>
+    <input type="text" id="title" name="title" required><br>
+
+    <label for="content">内容:</label>
+    <textarea id="content" name="content" required></textarea><br>
+
+    <button id="saveButton">保存</button>
+    <button id="addButton">发表</button>
+</form>
+</body>
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f2f2f2;
+    }
+
+    h1 {
+        color: #333;
+        margin-bottom: 20px;
+    }
+
+    #addPostForm {
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        width: 300px;
+    }
+
+    #addPostForm label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+    }
+
+    #addPostForm input,
+    #addPostForm select,
+    #addPostForm textarea {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
+    #addPostForm textarea {
+        height: 100px;
+
+        resize: vertical;
+    }
+
+    #addPostForm button {
+        width: 48%;
+        padding: 10px;
+        border: none;
+        border-radius: 5px;
+        background-color: #4CAF50;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    #addPostForm button:nth-child(odd) {
+        background-color: #007BFF;
+        margin-right: 4%;
+    }
+
+    #addPostForm button:hover {
+        background-color: #45a049;
+    }
+
+    #addPostForm button:nth-child(odd):hover {
+        background-color: #0056b3;
+    }
+</style>
+</html>

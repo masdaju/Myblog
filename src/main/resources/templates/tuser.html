@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Posts</title>
+    <link  rel="stylesheet" th:href="@{/css/category.css}" href="">
+    <script th:src="@{/js/jquery-3.7.1.min.js}" src="httm/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('.delete-button').on('click', function() {
+                var userId = $(this).data('id');
+                var token = localStorage.getItem('token');
+
+                if (confirm('确定要删除这个用户吗？')) {
+                    $.ajax({
+                        url: 'user/deleteUser',
+                        type: 'POST',
+                        data: {
+                            id: userId
+                        },
+                        beforeSend: function(request) {
+                            request.setRequestHeader("token", token);
+                        },
+                        success: function(response) {
+                            if (response.code === 0) {
+                                alert('删除成功');
+
+                                window.parent.loadPage("/user/userList")
+                            } else {
+                                alert('删除失败: ' + response.message);
+                            }
+                        },
+                        error: function(error) {
+                            console.error('删除用户时发生错误:', error);
+                            alert('删除失败');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+
+</head>
+<body>
+<h1>Posts</h1>
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Username</th>
+        <th>Role</th>
+        <th>CreateTime</th>
+        <th>Email</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="pages : ${page.getItems()}">
+        <td th:text="${pages.getId()}">ID</td>
+        <td th:text="${pages.getUsername()}">Username</td>
+        <td th:text="${pages.getRole()}">Role</td>
+        <td th:text="${pages.getCreatedAt()}">CreateTime</td>
+        <td th:text="${pages.getEmail()}">Email</td>
+        <td>
+            <button type="button" class="delete-button" th:data-id="${pages.getId()}">删除</button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.cg.myblog.mapper.LikesMapper">
+
+    <resultMap id="BaseResultMap" type="com.cg.myblog.pojo.Likes">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="userId" column="user_id" jdbcType="INTEGER"/>
+            <result property="postId" column="post_id" jdbcType="INTEGER"/>
+            <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,post_id,
+        created_at
+    </sql>
+    <insert id="add">
+        insert into likes(user_id,post_id,created_at) values( #{likes.userId},#{likes.postId});
+    </insert>
+    <select id="getlist" resultType="com.cg.myblog.pojo.Likes">
+        SELECT l.*, p.id as 'posts.id', p.title as 'posts.title', p.content as 'posts.content'
+        FROM likes l
+                 LEFT JOIN posts p ON l.post_id = p.id
+        WHERE l.user_id = #{uid}
+    </select>
+</mapper>

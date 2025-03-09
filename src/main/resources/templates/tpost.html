@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Posts</title>
+    <link rel="stylesheet" href="path/to/your/css/styles.css"> <!-- 你的样式路径 -->
+    <script th:src="@{/js/jquery-3.7.1.min.js}" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link  rel="stylesheet" th:href="@{/css/post.css}" href="">
+</head>
+<body>
+<h1>用户博客</h1>
+<table border="1">
+    <thead>
+    <tr>
+        <th>User ID</th>
+        <th>ID</th>
+        <th>Category ID</th>
+        <th>Title</th>
+<!--        <th>Content</th>-->
+        <th>Status</th>
+        <th>Created At</th>
+        <th>Actions</th> <!-- 添加Actions列 -->
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="post : ${postsPageBean.items}">
+        <td th:text="${post.userId}" ></td>
+        <td th:text="${post.id}">ID</td>
+        <td th:text="${post.categoryId}">Category ID</td>
+        <td th:text="${post.title}">Title</td>
+<!--        <td th:text="${post.content}">Content</td>-->
+        <td th:switch="${post.status}">
+            <span th:case="review">待审核</span>
+            <span th:case="draft">草稿</span>
+            <span th:case="published">已发布</span>
+        </td>
+        <td th:text="${post.createdAt}">Created At</td>
+        <td>
+            <a th:href="@{'/Postdetail/' + ${post.id}}" class="btn-details">查看详情</a>
+            <button type="button" class="edit-button" th:if="${session.user.getId() == post.userId}"
+                    th:data-id="${post.id}"
+                    th:data-title="${post.title}"
+                    th:data-content="${post.content}"
+                    th:data-uid="${post.userId}">修改</button>
+            <button type="button" class="delete-button" th:data-id="${post.id}" th:data-uid="${post.userId}">删除</button>
+            <button type="button" class="change-status-button" th:data-id="${post.id}" th:if="${session.user.getRole() == 'admin'&&post.status=='review'}">审核</button>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<!-- 修改表单弹出框 -->
+<!-- 修改表单弹出框 -->
+<div class="modal-overlay" id="modalOverlay"></div>
+<div id="editPostModal">
+    <h2>修改文章</h2>
+    <form id="editPostForm">
+        <input type="hidden" id="editPostId">
+        <input type="hidden" id="editUserId">
+        <label for="editTitle">Title:</label>
+        <input type="text" id="editTitle" name="title" required>
+        <label for="editContent">Content:</label>
+        <textarea id="editContent" name="content" required></textarea>
+        <div>
+            <button type="button" class="save-draft-btn">保存草稿</button>
+            <button type="button" class="submit-review-btn">提交审核</button>
+        </div>
+        <button type="button" id="cancelEditBtn">取消</button>
+    </form>
+</div>
+
+
+<script>
+    $(document).ready(function() {
+        const token = localStorage.getItem('token');
+
+        $('.edit-button').on('click', function() {
+            const postId = $(this).data('id');
+            const postTitle = $(this).data('title');
+            const postContent = $(this).data('content');
+            const userId = $(this).data('uid');
+
+            $('#editPostId').val(postId);
+            $('#editUserId').val(userId);
+            $('#editTitle').val(postTitle);
+            $('#editContent').val(postContent);
+
+            $('#editPostModal').addClass('active');
+            $('#modalOverlay').addClass('active');
+        });
+
+        // 隐藏修改表单弹出框
+        $('#cancelEditBtn, #modalOverlay').on('click', function() {
+            $('#editPostModal').removeClass('active');
+            $('#modalOverlay').removeClass('active');
+        });
+
+        // 提交修改表单
+        function submitPost(status) {
+            const post = {
+                id: $('#editPostId').val(),
+                userId: $('#editUserId').val(),
+                title: $('#editTitle').val(),
+                content: $('#editContent').val(),
+                status: status
+            };
+
+            $.ajax({
+                url: 'updatePost',
+                type: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'token': token
+                },
+                data: JSON.stringify(post),
+                success: function(response) {
+                    alert(response.message);
+                    $('#editPostModal').removeClass('active');
+                    $('#modalOverlay').removeClass('active');
+                    window.parent.loadPage("/getPostforUser")
+                },
+                error: function(error) {
+                    console.error('Error updating post:', error);
+                    alert('Error updating post');
+                }
+            });
+        }
+
+        // 保存草稿按钮点击事件
+        $('.save-draft-btn').on('click', function() {
+            submitPost('draft');
+        });
+
+        // 提交审核按钮点击事件
+        $('.submit-review-btn').on('click', function() {
+            submitPost('review');
+        });
+        //删除post
+
+
+        $('.delete-button').on('click', function() {
+            const pid = $(this).data('id');
+            const uid = $(this).data('uid');
+
+            if (confirm('确定要删除这个文章吗？')) {
+                $.ajax({
+                    url: '/deletePost',
+                    type: 'POST',
+                    data: {
+                        id: pid,
+                        uid: uid
+                    },
+                    beforeSend: function(request) {
+                        request.setRequestHeader("token", token);
+                    },
+                    success: function(response) {
+                        if (response.code === 0) {
+                            alert('删除成功');
+                            window.parent.loadPage("/getPostforUser")
+                        } else {
+                            alert('删除失败: ' + response.message);
+                        }
+                    },
+                    error: function(error) {
+                        console.error('删除用户时发生错误:', error);
+                        alert('删除失败');
+                    }
+                });
+            }
+        });
+
+        $('.change-status-button').on('click', function() {
+            const pid = $(this).data('id');
+
+            if (confirm('确定要审核这个文章吗？')) {
+                $.ajax({
+                    url: '/changeStatus',
+                    type: 'POST',
+                    data: {
+                        pid: pid
+                    },
+                    beforeSend: function(request) {
+                        request.setRequestHeader("token", token);
+                    },
+                    success: function(response) {
+                        if (response.code === 0) {
+                            alert('审核成功');
+                            window.parent.loadPage("/getPostforManager")
+                            // location.reload(); // 审核成功后刷新页面
+                        } else {
+                            alert('审核失败: ' + response.message);
+                        }
+                    },
+                    error: function(error) {
+                        console.error('审核文章时发生错误:', error);
+                        alert('审核失败');
+                    }
+                });
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

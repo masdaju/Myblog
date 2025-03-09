@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f2f2f2;
+        }
+
+        #loginForm {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        #loginForm label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        #loginForm input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        #loginForm button {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #loginForm button[type="button"] {
+            background-color: #007BFF;
+            margin-top: 10px;
+        }
+
+        #loginForm button:hover {
+            background-color: #45a049;
+        }
+
+        #loginForm button[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        #message {
+            margin-top: 20px;
+            text-align: center;
+            color: #ff0000;
+        }
+        h2{
+            margin-right: 100px;
+        }
+    </style>
+</head>
+<body>
+<h2>登录</h2>
+<form id="loginForm">
+    <label for="username">用户名:</label>
+    <input type="text" id="username" name="username" required><br><br>
+    <label for="password">密码:</label>
+    <input type="password" id="password" name="password" required><br><br>
+    <button type="submit">登录</button>
+    <button type="button" onclick="location.href='/toRegister'">注册</button> <!-- 注册按钮 -->
+</form>
+<!--<button id="testButton">测试请求</button>-->
+<p id="message"></p>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        const params = new URLSearchParams();
+        params.append('username', username);
+        params.append('password', password);
+
+        axios.post('user/doLogin', params, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+            .then(function(response) {
+                if (response.data.code === 0) {
+                    const token = response.data.data;  // 从响应中提取 token
+                    localStorage.setItem('token', token);
+                    document.getElementById('message').innerText = '登录成功！';
+                    console.log(token)
+                    location.href="/homepage"
+                    // 跳转到另一个页面或执行其他操作
+                } else {
+                    document.getElementById('message').innerText = response.data.message;
+                }
+            })
+            .catch(function(error) {
+                console.error('登录时发生错误:', error);
+                document.getElementById('message').innerText = '登录时发生错误。';
+            });
+    });
+
+    
+</script>
+<!--<script th:src="@{/js/auth.js}">-->
+<!--    //可以让该页面携带token-->
+<!--</script>-->
+</body>
+</html>

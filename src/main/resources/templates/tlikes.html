@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>User Likes</title>
+    <script th:src="@{/js/jquery-3.7.1.min.js}"></script>
+    <link  rel="stylesheet" th:href="@{/css/category.css}" href="">
+</head>
+<body>
+<h1>User Likes</h1>
+<table border="1">
+    <thead>
+    <tr>
+        <th>Like ID</th>
+        <th>Post ID</th>
+        <th>Post Title</th>
+        <th>Liked At</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="like : ${likes}">
+        <td th:text="${like.id}">Like ID</td>
+        <td th:text="${like.postId}">Post ID</td>
+        <td th:text="${like.posts.title}">Post Title</td>
+        <td th:text="${like.createdAt}">Liked At</td>
+        <td>
+            <a th:href="@{'/Postdetail/' + ${like.postId}}" class="btn-details">查看详情</a>
+            <button type="button" class="delete-button" th:data-id="${like.id}" >删除</button>
+
+        </td>
+    </tr>
+    </tbody>
+</table>
+<script>
+    var token = localStorage.getItem('token');  // 获取本地存储中的 token
+    $('.delete-button').on('click', function() {
+        const lid = $(this).data('id');
+
+        if (confirm('确定要审核这个文章吗？')) {
+            $.ajax({
+                url: '/deleteLikes',
+                type: 'POST',
+                data: {
+                    lid: lid
+                },
+                beforeSend: function(request) {
+                    request.setRequestHeader("token", token);
+                },
+                success: function(response) {
+                    if (response.code === 0) {
+                        alert('删除成功');
+                        window.parent.loadPage("/getmyLikes")
+                        // location.reload(); // 审核成功后刷新页面
+                    } else {
+                        alert('删除失败: ' + response.message);
+                    }
+                },
+                error: function(error) {
+                    console.error('删除时发生错误:', error);
+                    alert('删除失败');
+                }
+            });
+        }
+
+    });
+
+</script>
+</body>
+</html>

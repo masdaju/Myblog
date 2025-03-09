@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Posts</title>
+    <link rel="stylesheet" href="path/to/your/css/styles.css"> <!-- 你的样式路径 -->
+</head>
+<body>
+<h1>Posts</h1>
+<table border="1">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Post ID</th>
+        <th>User ID</th>
+        <th>Content</th>
+        <th>Created At</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="post : ${posts.getItems()}">
+        <td th:text="${post.getId()}">ID</td>
+        <td th:text="${post.getPostId()}">Post ID</td>
+        <td th:text="${post.userId}">User ID</td>
+        <td th:text="${post.content}">Content</td>
+        <td th:text="${post.createdAt}">Created At</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
